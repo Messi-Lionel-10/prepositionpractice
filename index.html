@@ -83,6 +83,54 @@ button:disabled{opacity:.45;cursor:not-allowed}
   .stats-layout{grid-template-columns:1fr}.panel.wide{grid-column:auto}.summary-grid{grid-template-columns:repeat(2,1fr)}.list{max-height:60vh}
 }
 @media(min-width:821px){.focus-only{display:none}.practice-toolbar{margin-top:0}.mode-card{left:50%;right:auto;transform:translateX(-50%);width:min(520px,calc(100% - 24px));}.question-panel{height:min(42svh,420px);max-height:420px}.answer-panel{padding-left:0;padding-right:0}}
+
+/* FINAL MOBILE PRACTICE VIEWPORT */
+:root{--practice-vvh:100dvh}
+@media(max-width:820px){
+  html,body{width:100%;height:100%;overflow:hidden!important;overscroll-behavior:none}
+  body.practice-lock{position:fixed;top:0;left:0;right:0;width:100%;height:var(--practice-vvh,100dvh);min-height:0;overflow:hidden!important;overscroll-behavior:none}
+  body.practice-lock .app{height:100%;min-height:0;margin:0;padding:0 12px;max-width:none;overflow:hidden}
+  body.practice-lock #study.active{position:relative;height:100%;width:100%;display:block;overflow:hidden}
+  body.practice-lock .practice-toolbar{display:none}
+  body.practice-lock .practice-shell{
+    width:100%;height:100%;min-height:0;max-width:none;margin:0;
+    display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;
+    gap:8px;padding:10px 0 10px;overflow:hidden;
+  }
+  body.practice-lock .question-panel{
+    flex:0 0 min(230px,calc(var(--practice-vvh,100dvh) - 170px));
+    height:min(230px,calc(var(--practice-vvh,100dvh) - 170px));
+    min-height:170px;max-height:230px;
+    padding:14px 15px;border-radius:18px;box-shadow:none;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:center;
+  }
+  body.practice-lock .eyebrow{font-size:8px;letter-spacing:1.2px;margin-bottom:5px}
+  body.practice-lock .question-number{font-size:10px;margin-bottom:7px;flex:0 0 auto}
+  body.practice-lock .sentence{
+    font-size:18px;line-height:1.32;letter-spacing:-.1px;
+    max-width:none;max-height:none;flex:1 1 auto;min-height:0;
+    overflow:auto;padding-right:3px;-webkit-overflow-scrolling:touch;
+  }
+  body.practice-lock .answer-panel{
+    flex:0 0 auto;width:100%;min-height:0;padding:0;border:0;border-radius:0;
+    background:transparent;box-shadow:none;overflow:hidden;
+  }
+  body.practice-lock .answerbox{width:100%;gap:0}
+  body.practice-lock .answerbox input{
+    width:100%;height:52px;min-height:52px;border-radius:13px;
+    padding:0 14px;font-size:19px;text-align:center;
+    -webkit-appearance:none;appearance:none;
+  }
+  body.practice-lock .feedback{
+    width:100%;height:76px;min-height:76px;max-height:76px;
+    margin-top:8px;padding:8px 11px;border-radius:13px;
+    font-size:12px;line-height:1.28;overflow:auto;
+  }
+  body.practice-lock .feedback .correctsentence{font-size:15px;line-height:1.28;margin-top:3px}
+  body.practice-lock .feedback .accepted{font-size:10px;margin-top:3px}
+  body.practice-lock .next,body.practice-lock .inline-actions{display:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -305,6 +353,22 @@ $('studyTab').onclick=()=>switchView('study');$('statsTab').onclick=()=>switchVi
 document.querySelectorAll('[data-listtab]').forEach(b=>b.addEventListener('click',()=>{activeListTab=b.dataset.listtab;renderMistakeList()}));
 $('mistakeList').addEventListener('click',e=>{const b=e.target.closest('[data-practice-id]');if(!b)return;const id=b.dataset.practiceId;mode=activeListTab==='needs'?'needs':'allmistakes';$('mode').value=mode;switchView('study');buildQueue(id)});
 window.addEventListener('resize',()=>document.body.classList.toggle('practice-lock',$('study').classList.contains('active')&&window.innerWidth<=820));
+
+
+function syncPracticeViewport(){
+  const vv=window.visualViewport;
+  const height=vv?vv.height:window.innerHeight;
+  document.documentElement.style.setProperty('--practice-vvh', `${Math.max(320,height)}px`);
+  if(document.body.classList.contains('practice-lock')){
+    try{window.scrollTo(0,0)}catch(e){}
+  }
+}
+syncPracticeViewport();
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',syncPracticeViewport,{passive:true});
+  window.visualViewport.addEventListener('scroll',syncPracticeViewport,{passive:true});
+}
+window.addEventListener('orientationchange',()=>setTimeout(syncPracticeViewport,120),{passive:true});
 
 populate();updateTop();updateModeHint();buildQueue();
 </script>
