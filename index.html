@@ -60,6 +60,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.summary-box{border:1px solid var(--line);border-radius:12px;padding:11px}.summary-box b{display:block;font-size:18px}.summary-box span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
 .mistake-tabs{display:flex;gap:8px;margin-bottom:13px;flex-wrap:wrap}.mistake-tabs button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;color:var(--muted);font-weight:750;font-size:12px}.mistake-tabs button.active{background:#151b24;color:#fff;border-color:#151b24}
 .list{max-height:430px;overflow:auto;padding-right:2px}.item{padding:12px 0;border-bottom:1px solid var(--line)}.item:first-child{padding-top:2px}.item:last-child{border-bottom:0}.item b{font-size:12px}.item .s{font-family:Georgia,serif;font-size:15px;line-height:1.45;margin-top:4px}.item .meta{font-size:11px;color:var(--muted);margin-top:5px}.item button{margin-top:7px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 9px;font-size:11px;font-weight:750}
+
+.coverage-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.coverage-main{font-size:28px;font-weight:850;letter-spacing:-.7px}.coverage-percent{font-size:22px;font-weight:850}
+.coverage-track{height:12px;border-radius:999px;background:#edf0f4;overflow:hidden;margin:12px 0 8px}
+.coverage-fill{height:100%;width:0%;background:#151b24;border-radius:999px;transition:width .25s ease}
+.coverage-meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px}.coverage-meta b{color:var(--text);font-size:12px}
+.coverage-note{margin-top:10px;font-size:12px;color:var(--muted)}
+
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line)}.table th{color:var(--muted);font-weight:700}
 .empty{padding:18px 0;color:var(--muted);font-size:12px}
 .hidden{display:none!important}
@@ -240,6 +248,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="summary-box"><b id="sNeeds">0</b><span>Needs practice</span></div>
     </div></section>
 
+    <section class="panel wide"><h2>Question coverage</h2>
+      <div class="coverage-head">
+        <div><div class="coverage-main" id="sCovered">0 / 1,401</div><div class="muted">Unique questions answered at least once</div></div>
+        <div class="coverage-percent" id="sCoveragePct">0%</div>
+      </div>
+      <div class="coverage-track"><div class="coverage-fill" id="sCoverageBar"></div></div>
+      <div class="coverage-meta"><span><b id="sRemaining">1,401</b> remaining</span><span><b id="sTotal">1,401</b> total</span></div>
+      <div class="coverage-note" id="sCoverageNote">Answer every question once to reach 100%. Repeating a question does not increase this count.</div>
+    </section>
+
     <section class="panel wide">
       <h2>Mistake history</h2>
       <div class="mistake-tabs">
@@ -374,8 +392,16 @@ function renderMistakeList(){
 }
 function renderStats(){
   const att=saved.attempted,cor=saved.correct,wro=saved.wrong;
+  const totalQuestions=QUESTIONS.length;
+  const covered=QUESTIONS.reduce((n,q)=>n+(historyOf(q).attempts>0?1:0),0);
+  const remaining=totalQuestions-covered;
+  const coveragePct=totalQuestions?Math.round(covered/totalQuestions*100):0;
   $('sScore').textContent=saved.score;$('sAttempt').textContent=att;$('sCorrect').textContent=cor;$('sWrong').textContent=wro;
   $('sAccuracy').textContent=att?Math.round(cor/att*100)+'%':'—';$('sBest').textContent=saved.best;
+  $('sCovered').textContent=`${covered.toLocaleString()} / ${totalQuestions.toLocaleString()}`;
+  $('sCoveragePct').textContent=coveragePct+'%';$('sCoverageBar').style.width=coveragePct+'%';
+  $('sRemaining').textContent=remaining.toLocaleString();$('sTotal').textContent=totalQuestions.toLocaleString();
+  $('sCoverageNote').textContent=remaining===0?`Complete - all ${totalQuestions.toLocaleString()} questions have been answered at least once.`:`${remaining.toLocaleString()} questions have never been attempted yet. Repeating a question does not increase this count.`;
   renderMistakeList();
   let rows='';
   for(let e=1;e<=71;e++){
